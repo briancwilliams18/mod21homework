@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3001;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// if we're in production, serve client/build as static assets
+// If we're in production, serve client/build as static assets
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
 }
@@ -22,7 +22,7 @@ const server = new ApolloServer({
   resolvers,
   context: ({ req }) => {
     // Implement authentication logic if needed
-    // Example: check the request headers for authentication token
+    // Example: check the request headers for an authentication token
     const token = req.headers.authorization || '';
     // Add any other context data you need
 

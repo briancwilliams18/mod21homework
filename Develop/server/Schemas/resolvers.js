@@ -1,29 +1,57 @@
-// Import any necessary models or modules
-const { User, Book } = require('../models'); // Update with your actual models
+const { User } = require('../models');
+const { signToken } = require('../utils/auth');
 
 const resolvers = {
   Query: {
-    me: async (parent, args, context) => {
-      // Implement me query logic
-      // Ensure to retrieve user data from the context
-    },
+    me: (_, __, context) => context.user,
   },
   Mutation: {
-    loginUser: async (parent, args, context) => {
-      // Implement login user mutation logic
-      // Ensure to handle authentication and return token and user data
+    addUser: async (_, { username, email, password }) => {
+      const user = await User.create({ username, email, password });
+      const token = signToken(user);
+      return { token, user };
     },
-    addUser: async (parent, args, context) => {
-      // Implement add user mutation logic
-      // Ensure to handle user creation and return token and user data
+    loginUser: async (_, { email, password }) => {
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        throw new Error("Can't find this user");
+      }
+
+      const correctPw = await user.isCorrectPassword(password);
+
+      if (!correctPw) {
+        throw new Error('Wrong password!');
+      }
+
+      const token = signToken(user);
+      return { token, user };
     },
-    saveBook: async (parent, args, context) => {
-      // Implement save book mutation logic
-      // Ensure to handle book creation and association with the user
+    saveBook: async (_, { user, bookData }) => {
+      try {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: user._id },
+          { $addToSet: { savedBooks: bookData } },
+          { new: true, runValidators: true }
+        );
+        return updatedUser;
+      } catch (err) {
+        console.error(err);
+        throw new Error('Failed to save book');
+      }
     },
-    removeBook: async (parent, args, context) => {
-      // Implement remove book mutation logic
-      // Ensure to handle book removal from the user's saved books
+    removeBook: async (_, { user, bookId }) => {
+      const updatedUser = await User.findOneAndUpdate(
+        { _id: user._id },
+        { $pull: { savedBooks: { bookId } } },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        throw new Error("Couldn't find user with this id!");
+      }
+
+      return updatedUser;
     },
   },
 };
