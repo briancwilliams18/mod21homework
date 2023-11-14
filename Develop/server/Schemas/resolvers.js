@@ -1,9 +1,15 @@
+// schemas/resolvers.js
 const { User } = require('../models');
 const { signToken } = require('../utils/auth');
 
 const resolvers = {
   Query: {
-    me: (_, __, context) => context.user,
+    me: (_, __, context) => {
+      if (context.user) {
+        return User.findOne({ _id: context.user._id });
+      }
+      throw new Error('You are not authenticated!');
+    },
   },
   Mutation: {
     addUser: async (_, { username, email, password }) => {
@@ -40,20 +46,9 @@ const resolvers = {
         throw new Error('Failed to save book');
       }
     },
-    removeBook: async (_, { user, bookId }) => {
-      const updatedUser = await User.findOneAndUpdate(
-        { _id: user._id },
-        { $pull: { savedBooks: { bookId } } },
-        { new: true }
-      );
-
-      if (!updatedUser) {
-        throw new Error("Couldn't find user with this id!");
-      }
-
-      return updatedUser;
-    },
   },
 };
 
 module.exports = resolvers;
+
+

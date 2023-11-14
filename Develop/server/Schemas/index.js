@@ -1,15 +1,18 @@
-const { gql } = require('apollo-server-express');
-const typeDefs = require('./typeDefs'); // Adjust the path accordingly
-const resolvers = require('./resolvers'); // Adjust the path accordingly
+// schemas/index.js
+const { mergeTypeDefs, mergeResolvers } = require('@graphql-tools/merge');
+const { loadFilesSync } = require('@graphql-tools/load-files');
+const path = require('path');
 
+// Load type definitions using the file loader
+const typesArray = loadFilesSync(path.join(__dirname, './**/*.graphql'));
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  context: ({ req }) => {
-    const token = req.headers.authorization || '';
-    return { user: decodeToken(token) };
-  },
-});
+// Merge type definitions
+const typeDefs = mergeTypeDefs(typesArray);
 
-server.applyMiddleware({ app });
+// Load resolvers using the file loader
+const resolversArray = loadFilesSync(path.join(__dirname, './**/*.js'));
+
+// Merge resolvers
+const resolvers = mergeResolvers(resolversArray);
+
+module.exports = { typeDefs, resolvers };

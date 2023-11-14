@@ -1,3 +1,4 @@
+// auth.js
 const { AuthenticationError } = require('apollo-server-express');
 const jwt = require('jsonwebtoken');
 
@@ -17,7 +18,7 @@ const authMiddleware = (context) => {
 
   try {
     const { data } = jwt.verify(token, secret, { maxAge: expiration });
-    context.user = data;
+    context.user = data; // This is the authenticated user data
   } catch {
     console.log('Invalid token');
     throw new AuthenticationError('Invalid token!');
@@ -32,3 +33,4 @@ const signToken = ({ username, email, _id }) => {
 };
 
 module.exports = { authMiddleware, signToken };
+
